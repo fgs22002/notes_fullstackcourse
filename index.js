@@ -2,11 +2,6 @@ const express = require('express')
 const cors = require('cors')
 const app = express()
 
-// Middleware creado por otros
-app.use(express.json())
-app.use(cors()) // permitimos solicitudes de todos los orígenes
-app.use(express.static('build')) // para servir contenido estático (ante petición GET busta en el directorio 'build')
-
 // Middleware que definimos nosotros
 const requestLogger = (request, response, next) => {
     console.log('Method:', request.method)
@@ -15,6 +10,17 @@ const requestLogger = (request, response, next) => {
     console.log('---')
     next()
 }
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+
+// Middleware creado por otros
+app.use(express.json())
+app.use(cors()) // permitimos solicitudes de todos los orígenes
+app.use(express.static('build')) // para servir contenido estático (ante petición GET busta en el directorio 'build')
+
+// Middleware propio
 app.use(requestLogger)
 
 let notes = [
@@ -85,6 +91,19 @@ app.get('/api/notes/:id', (request, response) => {
 
 })
 
+app.put('/api/notes/:id', (request, response) => {
+  const id = Number(request.params.id)
+  const newNote = request.body
+  notes = notes.map(note => note.id === id ? newNote : note)
+  const note = notes.find(note => note.id === id)
+  if (note) {
+     response.json(note)
+  } else {
+      response.status(404).end()
+  }
+
+})
+
 app.delete('/api/notes/:id', (request, response) => {
     const id = Number(request.params.id)
     notes = notes.filter(note => note.id !== id)
@@ -92,10 +111,7 @@ app.delete('/api/notes/:id', (request, response) => {
     response.status(204).end()
 })
 
-const unknownEndpoint = (request, response) => {
-    response.status(404).send({ error: 'unknown endpoint' })
-}
-  
+// Middleware propio
 app.use(unknownEndpoint)
 
 const PORT = process.env.PORT || 3001
