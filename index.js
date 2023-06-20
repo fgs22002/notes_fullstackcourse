@@ -5,6 +5,8 @@ const app = express()
 // Middleware creado por otros
 app.use(express.json())
 app.use(cors()) // permitimos solicitudes de todos los orígenes
+app.use(express.static('build')) // para servir contenido estático (ante petición GET busta en el directorio 'build')
+
 // Middleware que definimos nosotros
 const requestLogger = (request, response, next) => {
     console.log('Method:', request.method)
